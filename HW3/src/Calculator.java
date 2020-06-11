@@ -16,6 +16,9 @@ import javax.swing.text.JTextComponent;
 public class Calculator implements ActionListener {
 	
 	private JTextField txtf;
+	private double operand1 = 0, operand2 = 0;
+	private String operator = "";
+	private boolean operationPerformed = false;
 	
 	
 	public Calculator ()
@@ -62,11 +65,108 @@ public class Calculator implements ActionListener {
 		frame.setVisible(true);
 	}
 	
+	
+	public void clrOperation()
+	{
+		operand1 = 0;
+		operand2 = 0;
+		operator = "";
+		operationPerformed = false;
+		txtf.setText("");
+	}
+	
+	public void setOperator(String op)
+	{
+		String str = txtf.getText();
+		if (str.equals("") || operationPerformed)
+			return;
+		else
+		{
+			if (operator.equals(""))
+			{
+				operator = op;
+				operand1 = Double.valueOf(str);
+				txtf.setText(str + " " + operator + " ");
+			}
+			else
+			{
+				String newstr = str.replace(operator, op);
+				operator = op;
+				txtf.setText(newstr);
+			}
+		}
+	}
+	
+	public void performOperation()
+	{
+		String str = txtf.getText();
+		double output = 0;
+		boolean error = false;
+		
+		// no entry yet or double click on Enter after operation is already performed
+		if (str.equals("") || operationPerformed)
+			return;
+		
+		int operatorIndex = str.indexOf(operator);
+		String operand2str = str.substring(operatorIndex+1, str.length());
+		operand2 = Double.valueOf(operand2str);
+		
+		if (operator.equals("+"))
+		{
+			output = operand1 + operand2;
+		}
+		else if (operator.equals("-"))
+		{
+			output = operand1 - operand2;
+		}
+		else if (operator.equals("*"))
+		{
+			output = operand1 * operand2;
+		}
+		else if (operator.equals("/"))
+		{
+			output = operand1 / operand2;
+		}
+		else
+		{
+			error = true;
+			txtf.setText(str + " = ERR ");
+		}
+		
+		if (!error)
+		{
+			txtf.setText(str + " = " + output);
+		}
+		
+		operationPerformed = true;
+	}
+	
 	public void actionPerformed (ActionEvent e)
 	{
 		CButton button = (CButton) e.getSource();
-		txtf.setText(button.getLabel());
-		//System.out.println(button.getLabel());
+		String label = button.getLabel();
+		
+		if (label.equals("CLR"))
+		{
+			clrOperation();
+		}
+		else if (label.matches("[0-9.]"))
+		{
+			if (operationPerformed)
+			{
+				clrOperation();
+			}
+			String str = txtf.getText();
+			txtf.setText(str + label);
+		}
+		else if (label.matches("[+*/-]"))
+		{
+			setOperator(label);
+		}
+		else if (label.equals("ENTER"))
+		{
+			performOperation();
+		}
 	}
 	
 	public static void main(String[] args) {
