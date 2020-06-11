@@ -4,8 +4,9 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-
+import java.util.ArrayList;    
+import java.lang.reflect.Method;  
+import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -19,7 +20,8 @@ public class Calculator implements ActionListener {
 	private double operand1 = 0, operand2 = 0;
 	private String operator = "";
 	private boolean operationPerformed = false;
-	
+	private Method func;
+	private static Calculator cal;
 	
 	public Calculator ()
 	{
@@ -63,6 +65,7 @@ public class Calculator implements ActionListener {
 		frame.setSize(480,480);
 		frame.add(panel, BorderLayout.CENTER);
 		frame.setVisible(true);
+		
 	}
 	
 	
@@ -73,6 +76,26 @@ public class Calculator implements ActionListener {
 		operator = "";
 		operationPerformed = false;
 		txtf.setText("");
+	}
+	
+	public double add(double op1, double op2)
+	{
+		return op1+op2;
+	}
+	
+	public double substract(double op1, double op2)
+	{
+		return op1-op2;
+	}
+	
+	public double multiply(double op1, double op2)
+	{
+		return op1*op2;
+	}
+	
+	public double divide(double op1, double op2)
+	{
+		return op1/op2;
 	}
 	
 	public void setOperator(String op)
@@ -95,13 +118,38 @@ public class Calculator implements ActionListener {
 				txtf.setText(newstr);
 			}
 		}
+		
+		// save operator method in method variable "func"
+		try
+		{
+			if (operator.equals("+"))
+			{
+				func = Calculator.class.getDeclaredMethod("add", double.class, double.class);
+			}
+			else if (operator.equals("-"))
+			{
+				func = Calculator.class.getDeclaredMethod("substract", double.class, double.class);
+			}
+			else if (operator.equals("*"))
+			{
+				func = Calculator.class.getDeclaredMethod("multiply", double.class, double.class);
+			}
+			else if (operator.equals("/"))
+			{
+				func = Calculator.class.getDeclaredMethod("divide", double.class, double.class);
+			}
+		} catch (NoSuchMethodException | SecurityException e)
+		{
+			e.printStackTrace();
+		}
+		
 	}
+	
 	
 	public void performOperation()
 	{
 		String str = txtf.getText();
 		double output = 0;
-		boolean error = false;
 		
 		// no entry yet or double click on Enter after operation is already performed
 		if (str.equals("") || operationPerformed)
@@ -111,30 +159,20 @@ public class Calculator implements ActionListener {
 		String operand2str = str.substring(operatorIndex+1, str.length());
 		operand2 = Double.valueOf(operand2str);
 		
-		if (operator.equals("+"))
+		if (operator.matches("[^+*/-]"))
 		{
-			output = operand1 + operand2;
-		}
-		else if (operator.equals("-"))
-		{
-			output = operand1 - operand2;
-		}
-		else if (operator.equals("*"))
-		{
-			output = operand1 * operand2;
-		}
-		else if (operator.equals("/"))
-		{
-			output = operand1 / operand2;
+			txtf.setText(str + " = ERR ");
 		}
 		else
 		{
-			error = true;
-			txtf.setText(str + " = ERR ");
-		}
-		
-		if (!error)
-		{
+			// invoke method to calculate based on operator +,-,*,/
+			try
+			{
+				output = (double) func.invoke(cal, operand1, operand2);
+			} catch (SecurityException | IllegalAccessException | InvocationTargetException e)
+			{
+				e.printStackTrace();
+			}
 			txtf.setText(str + " = " + output);
 		}
 		
@@ -169,9 +207,9 @@ public class Calculator implements ActionListener {
 		}
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args)  {
 		
-		new Calculator();
+		cal = new Calculator();
 		
 	}
 	
