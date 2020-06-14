@@ -2,6 +2,7 @@ import java.awt.Dimension;
 
 import javax.swing.JButton;
 
+@SuppressWarnings("serial")
 public class CButton extends JButton {
 	private final int WIDTH = 150, HEIGHT = 50;
 	private String label;
